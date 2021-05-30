@@ -2,8 +2,10 @@ package br.utfpr.crudcidades.visao;
 
 import java.util.HashSet;
 import java.util.Set;
+import javax.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -28,15 +30,42 @@ public class CidadeController {
     }
     
     @PostMapping("/criar")
-    public String criar(Cidade cidade) {
-        cidades.add(cidade);
+    public String criar(@Valid Cidade cidade, BindingResult validacao, Model memoria) {
+        if(validacao.hasErrors()) {
+            validacao.getFieldErrors()
+                .forEach(error -> 
+                    memoria.addAttribute(
+                        error.getField(),
+                        error.getDefaultMessage()
+                    )
+                );
+            
+            memoria.addAttribute("nomeInformado", cidade.getNome());
+            memoria.addAttribute("estadoInformado", cidade.getEstado());
+            memoria.addAttribute("listaCidades", cidades);
+            return ("/crud");
+        } else {
+            var cidadeAtual = cidades
+                    .stream()
+                    .filter(city ->
+                        city.getNome().equals(cidade.getNome()) &&
+                        city.getEstado().equals(cidade.getEstado())
+                    ).findAny();
+            
+            if(!(cidadeAtual.isPresent())) {
+                cidades.add(cidade);
+            }
+        }       
+        
         return "redirect:/";
     }
     
     @GetMapping("/excluir")
     public String excluir(@RequestParam String nome, @RequestParam String estado) {
-        cidades.removeIf(cidadeAtual -> cidadeAtual.getNome().equals(nome) && 
-            cidadeAtual.getEstado().equals(estado)); 
+        cidades.removeIf(cidadeAtual -> 
+            cidadeAtual.getNome().equals(nome) && 
+            cidadeAtual.getEstado().equals(estado)
+        ); 
         return "redirect:/";
     }
     
@@ -60,14 +89,23 @@ public class CidadeController {
     
     @PostMapping("/alterar")
     public String alterar(@RequestParam String nomeAtual,
-            @RequestParam String estadoAtual, Cidade cidade) {
-        cidades.removeIf(cidadeAtual -> 
-            cidadeAtual.getNome().equals(nomeAtual) &&
-            cidadeAtual.getEstado().equals(estadoAtual)
-        );
+            @RequestParam String estadoAtual, Cidade cidade,
+            BindingResult validacao, Model memoria) {
         
-        criar(cidade);        
-        return "redirect:/";
+        String resultado = criar(cidade, validacao, memoria);         
+        if(resultado.equals("redirect:/")) {
+            cidades.removeIf(cidadeAtual -> 
+                cidadeAtual.getNome().equals(nomeAtual) &&
+                cidadeAtual.getEstado().equals(estadoAtual)
+            );
+        }      
+               
+        return resultado;
     }
     
 }
+
+/*
+    @Valid -> Aciona a validação quando ele receber um objeto do tipo Cidade
+    BindingResult -> Recebe possíveis erros gerados durante a validação
+*/
