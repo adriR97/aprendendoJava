@@ -1,4 +1,4 @@
-package br.utfpr.crudcidades.visao;
+package br.utfpr.crudcidades.cidade;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
@@ -28,7 +28,20 @@ public final class Cidade {
 
     public String getEstado() {
         return estado;
-    }    
+    }
+
+    /* Conversão de objeto Cidade para CidadeEntidade */
+    public CidadeEntidade clonar() {
+        var cidadeEntidade = new CidadeEntidade();
+        cidadeEntidade.setNome(this.getNome());
+        cidadeEntidade.setEstado(this.getEstado());
+        return cidadeEntidade;
+    }
+    
+    /* Conversão de objeto CidadeEntidade para Cidade */
+    public Cidade clonar(CidadeEntidade cidade) {
+        return new Cidade(cidade.getNome(), cidade.getEstado());
+    }
     
 }
 
