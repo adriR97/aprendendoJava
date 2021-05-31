@@ -1,7 +1,6 @@
 package br.utfpr.crudcidades.cidade;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
+import javax.validation.constraints.*;
 
 /**
  *
@@ -39,7 +38,7 @@ public final class Cidade {
     }
     
     /* Conversão de objeto CidadeEntidade para Cidade */
-    public Cidade clonar(CidadeEntidade cidade) {
+    public static Cidade clonar(CidadeEntidade cidade) {
         return new Cidade(cidade.getNome(), cidade.getEstado());
     }
     

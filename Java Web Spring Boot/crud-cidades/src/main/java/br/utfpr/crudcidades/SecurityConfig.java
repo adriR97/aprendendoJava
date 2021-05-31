@@ -1,13 +1,11 @@
 package br.utfpr.crudcidades;
 
 import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.*;
 import org.springframework.context.event.EventListener;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.authentication.event.InteractiveAuthenticationSuccessEvent;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.web.configuration.*;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -19,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Configuration
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
+    @Override
     protected void configure(HttpSecurity http) throws Exception {
         /* Mapeando as autorizações do sistema */
         http.csrf().disable()
@@ -28,10 +27,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .antMatchers("/excluir").hasAuthority("admin")
             .antMatchers("/preparaAlterar").hasAuthority("admin")
             .antMatchers("/alterar").hasAuthority("admin")
+            .antMatchers("/mostrar").authenticated()
             .anyRequest().denyAll()
             .and()
             .formLogin()
             .loginPage("/login.html").permitAll()
+            .defaultSuccessUrl("/", false)
             .and().logout().permitAll();
     }
     
@@ -44,6 +45,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @EventListener(ApplicationReadyEvent.class)
     public void encodeSenha() {
         System.out.println(this.cifrador().encode("admin1234"));
+    }
+    
+    @EventListener(InteractiveAuthenticationSuccessEvent.class)
+    public void usuarioAtual(InteractiveAuthenticationSuccessEvent event) {
+        var usuario = event.getAuthentication().getName();
+        System.out.println(usuario);
     }
     
 }
